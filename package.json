@@ -1,0 +1,65 @@
+{
+  "name": "credchain",
+  "version": "1.0.0",
+  "description": "CredChain - Decentralized Credit & Reputation Scoring System",
+  "main": "index.js",
+  "scripts": {
+    "install:all": "npm run install:contracts && npm run install:backend && npm run install:frontend",
+    "install:contracts": "cd contracts && cargo build",
+    "install:backend": "cd backend && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "build:all": "npm run build:contracts && npm run build:backend && npm run build:frontend",
+    "build:contracts": "cd contracts && cargo build --release",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "test:all": "npm run test:contracts && npm run test:backend && npm run test:frontend",
+    "test:contracts": "cd contracts && cargo test",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test",
+    "test:integration": "cd tests/integration && npm test",
+    "dev:contracts": "cd contracts && cargo watch",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm start",
+    "start": "docker-compose up -d",
+    "stop": "docker-compose down",
+    "logs": "docker-compose logs -f",
+    "clean": "docker-compose down -v && docker system prune -f",
+    "deploy:contracts": "cd contracts && cargo run --bin deploy",
+    "lint:all": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:frontend": "cd frontend && npm run lint",
+    "format": "prettier --write .",
+    "audit": "npm audit && cd backend && npm audit && cd ../frontend && npm audit",
+    "setup": "npm run install:all && cp .env.example .env",
+    "docker:build": "docker-compose build",
+    "docker:dev": "docker-compose -f docker-compose.dev.yml up",
+    "docker:prod": "docker-compose -f docker-compose.prod.yml up -d"
+  },
+  "keywords": [
+    "blockchain",
+    "stellar",
+    "credit-scoring",
+    "reputation",
+    "decentralized",
+    "web3",
+    "defi"
+  ],
+  "author": "CredChain Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/olaleyeolajide81-sketch/CredChain.git"
+  },
+  "bugs": {
+    "url": "https://github.com/olaleyeolajide81-sketch/CredChain/issues"
+  },
+  "homepage": "https://github.com/olaleyeolajide81-sketch/CredChain#readme",
+  "devDependencies": {
+    "prettier": "^2.8.4",
+    "concurrently": "^7.6.0"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}

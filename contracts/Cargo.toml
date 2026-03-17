@@ -1,0 +1,22 @@
+[package]
+name = "credchain-contracts"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+stellar-contract-sdk = "0.9.0"
+stellar-xdr = { version = "0.0.2", features = ["next"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+
+[dev-dependencies]
+stellar-contract-sdk = { version = "0.9.0", features = ["testutils"] }
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1

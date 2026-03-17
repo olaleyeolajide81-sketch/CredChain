@@ -1,0 +1,138 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: credchain-postgres
+    environment:
+      POSTGRES_DB: credchain
+      POSTGRES_USER: credchain
+      POSTGRES_PASSWORD: credchain123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - credchain-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: credchain-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - credchain-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: credchain-backend
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://credchain:credchain123@postgres:5432/credchain
+      - REDIS_URL=redis://redis:6379
+      - STELLAR_NETWORK=testnet
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - credchain-network
+    command: npm run dev
+
+  # Frontend Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: credchain-frontend
+    environment:
+      - REACT_APP_API_URL=http://localhost:3001
+      - REACT_APP_STELLAR_NETWORK=testnet
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - credchain-network
+    command: npm start
+
+  # Stellar Testnet Validator (for development)
+  stellar-testnet:
+    image: stellar/quickstart:latest
+    container_name: credchain-stellar
+    ports:
+      - "8000:8000"  # Horizon
+      - "11626:11626"  # Stellar Core
+      - "9000:9000"   # Friendbot
+    environment:
+      - NETWORK=testnet
+    networks:
+      - credchain-network
+
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: credchain-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - credchain-network
+
+  # Grafana Dashboard
+  grafana:
+    image: grafana/grafana:latest
+    container_name: credchain-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./infrastructure/grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - credchain-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: credchain-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./infrastructure/nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - credchain-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  credchain-network:
+    driver: bridge
